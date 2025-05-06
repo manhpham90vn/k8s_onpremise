@@ -4,6 +4,7 @@
 sudo apt install curl gnupg -y
 
 # Fetch the Kubernetes GPG key and save it in the apt keyring directory
+sudo rm -f /etc/apt/keyrings/kubernetes-apt-keyring.gpg
 curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.32/deb/Release.key | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
 
 # Add the Kubernetes APT repository to the system's sources list, specifying the keyring for authentication
