@@ -1,0 +1,53 @@
+- name: Setup Kubernetes prerequisites
+  hosts: all
+  become: yes
+  tasks:
+    - name: Copy disable swap script to remote
+      copy:
+        src: scripts/disable-swap.sh
+        dest: /tmp/disable-swap.sh
+        mode: '0755'
+
+    - name: Run disable swap script
+      shell: /tmp/disable-swap.sh
+      register: script_output_swap
+
+    - name: Print disable swap script output
+      debug:
+        var: script_output_swap.stdout_lines
+
+    - name: Copy containerd script to remote
+      copy:
+        src: scripts/install-containerd.sh
+        dest: /tmp/install-containerd.sh
+        mode: '0755'
+
+    - name: Run containerd installation script
+      shell: /tmp/install-containerd.sh
+      register: script_output_containerd
+
+    - name: Print containerd installation output
+      debug:
+        var: script_output_containerd.stdout_lines
+    
+    - name: Print containerd installation output stderr
+      debug:
+        var: script_output_containerd.stderr_lines
+
+    - name: Copy kubernetes installation script to remote
+      copy:
+        src: scripts/install-kubernetes.sh
+        dest: /tmp/install-kubernetes.sh
+        mode: '0755'
+
+    - name: Run kubernetes installation script
+      shell: /tmp/install-kubernetes.sh
+      register: script_output_kubernetes
+
+    - name: Print kubernetes installation output
+      debug:
+        var: script_output_kubernetes.stdout_lines
+
+    - name: Print kubernetes installation output stderr
+      debug:
+        var: script_output_kubernetes.stderr_lines
