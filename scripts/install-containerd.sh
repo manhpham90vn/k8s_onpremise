@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# Check if containerd is already installed
+if systemctl is-active --quiet containerd; then
+    echo "Containerd is already installed and running."
+    exit 0
+fi
+
 # Load the necessary kernel modules for container support
 modprobe overlay
 modprobe br_netfilter

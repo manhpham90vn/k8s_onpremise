@@ -59,4 +59,9 @@ Vagrant.configure("2") do |config|
             end
         end
     end
+
+    # Add trigger to update inventory after all VMs are up
+    config.trigger.after :up do |trigger|
+        trigger.run = {inline: "/bin/bash -c 'ruby update_inventory.rb'"}
+    end
 end

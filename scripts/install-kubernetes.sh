@@ -1,5 +1,14 @@
 #!/bin/bash
 
+# Check if kubelet is already installed and running
+if systemctl is-active --quiet kubelet; then
+    echo "Kubelet is already installed and running."
+    echo "Kubernetes version information:"
+    kubectl version --client
+    kubeadm version
+    exit 0
+fi
+
 # Install curl to fetch the Kubernetes GPG key
 sudo apt install curl gnupg -y
 
@@ -18,6 +27,9 @@ sudo apt install -y kubelet kubeadm kubectl
 
 # Enable the kubelet service to start on boot
 sudo systemctl enable kubelet
+
+# Start the kubelet service
+sudo systemctl start kubelet
 
 # Check the status of the kubelet service to ensure it's running
 sudo systemctl status kubelet

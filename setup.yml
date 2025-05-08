@@ -1,53 +1,80 @@
-- name: Setup Kubernetes prerequisites
+---
+- name: Setup Kubernetes cluster
   hosts: all
   become: yes
+  vars:
+    scripts_dir: scripts
+    temp_dir: /tmp
+
   tasks:
-    - name: Copy disable swap script to remote
+    - name: Copy hosts file to /etc/hosts
       copy:
-        src: scripts/disable-swap.sh
-        dest: /tmp/disable-swap.sh
-        mode: '0755'
+        src: hosts
+        dest: /etc/hosts
+        mode: '0644'
+      tags: hosts
 
-    - name: Run disable swap script
-      shell: /tmp/disable-swap.sh
-      register: script_output_swap
+    - name: Copy and execute scripts
+      block:
+        - name: Copy {{ item }} script to remote
+          copy:
+            src: "{{ scripts_dir }}/{{ item }}"
+            dest: "{{ temp_dir }}/{{ item }}"
+            mode: '0755'
+          loop:
+            - disable-swap.sh
+            - install-containerd.sh
+            - install-kubernetes.sh
+          register: script_copy
 
-    - name: Print disable swap script output
-      debug:
-        var: script_output_swap.stdout_lines
+        - name: Execute disable swap script
+          shell: "{{ temp_dir }}/disable-swap.sh"
+          register: script_output_swap
+          tags: swap
 
-    - name: Copy containerd script to remote
-      copy:
-        src: scripts/install-containerd.sh
-        dest: /tmp/install-containerd.sh
-        mode: '0755'
+        - name: Execute containerd installation script
+          shell: "{{ temp_dir }}/install-containerd.sh"
+          register: script_output_containerd
+          tags: containerd
 
-    - name: Run containerd installation script
-      shell: /tmp/install-containerd.sh
-      register: script_output_containerd
+        - name: Execute kubernetes installation script
+          shell: "{{ temp_dir }}/install-kubernetes.sh"
+          register: script_output_kubernetes
+          tags: kubernetes
 
-    - name: Print containerd installation output
-      debug:
-        var: script_output_containerd.stdout_lines
-    
-    - name: Print containerd installation output stderr
-      debug:
-        var: script_output_containerd.stderr_lines
+      rescue:
+        - name: Display error message
+          debug:
+            msg: "An error occurred during script execution"
 
-    - name: Copy kubernetes installation script to remote
-      copy:
-        src: scripts/install-kubernetes.sh
-        dest: /tmp/install-kubernetes.sh
-        mode: '0755'
+    - name: Display script outputs
+      block:
+        - name: Show swap script output
+          debug:
+            var: script_output_swap.stdout_lines
+          when: script_output_swap.stdout_lines is defined
+          tags: swap
 
-    - name: Run kubernetes installation script
-      shell: /tmp/install-kubernetes.sh
-      register: script_output_kubernetes
+        - name: Show containerd script output
+          debug:
+            var: script_output_containerd.stdout_lines
+          when: script_output_containerd.stdout_lines is defined
+          tags: containerd
 
-    - name: Print kubernetes installation output
-      debug:
-        var: script_output_kubernetes.stdout_lines
+        - name: Show containerd script errors
+          debug:
+            var: script_output_containerd.stderr_lines
+          when: script_output_containerd.stderr_lines is defined
+          tags: containerd
 
-    - name: Print kubernetes installation output stderr
-      debug:
-        var: script_output_kubernetes.stderr_lines
+        - name: Show kubernetes script output
+          debug:
+            var: script_output_kubernetes.stdout_lines
+          when: script_output_kubernetes.stdout_lines is defined
+          tags: kubernetes
+
+        - name: Show kubernetes script errors
+          debug:
+            var: script_output_kubernetes.stderr_lines
+          when: script_output_kubernetes.stderr_lines is defined
+          tags: kubernetes
